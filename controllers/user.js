@@ -1,5 +1,7 @@
-const { where } = require('sequelize')
+
 const user=require('../models/user')
+const bcrypt = require('bcrypt')
+
 
 function isStringValid(string) {
     if(string==undefined || string.length==0){
@@ -16,12 +18,16 @@ exports.signup=async (req,res,next)=>{
         if(isStringValid(name) || isStringValid(email) || isStringValid(password)){
                 return res.status(400).json({err:`please complete all the input fields`})
             }
-        await user.create({
-            name,
-            email,
-            password
+        const saltRounds=10;
+        bcrypt.hash(password,saltRounds,async (err,hash)=>{
+            console.log(err)
+            await user.create({
+                name,
+                email,
+                password:hash
+            })
+            res.status(201).json({message:'Succesfully created new user'})
         })
-        res.status(201).json({message:'Succesfully created new user'})
     } catch (error) {
         res.status(500).json(error)
     }
@@ -34,11 +40,17 @@ exports.login=async (req,res,next)=>{
         }
         const User=await user.findAll({where:{email}})
             if(User.length>0){
-                if (User[0].password==password) {
-                    res.status(200).json({success:true, message:'User logged in successfully'})
-                } else {
-                    return res.status(400).json({success:false, message:'Password is incorrect'})
-                }
+                bcrypt.compare(password,User[0].password,(err,result)=>{
+                    if(err){
+                        throw new Error('Something went wrong')
+                    }
+                    if(result==true){
+                        res.status(200).json({success:true, message:'User logged in successfully'})
+                    }
+                    else{
+                        return res.status(400).json({success:false, message:'Password is incorrect'})
+                    }
+                })
             }else{
                 return res.status(404).json({success:false, message:'User does not exist'})
             }
