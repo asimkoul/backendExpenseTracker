@@ -6,7 +6,7 @@ async function login(event) {
             password:event.target.password.value
         }    
         const response=await axios.post("http://localhost:3000/user/login",loginDetails)
-        if (response.status===201) {
+        if (response.status===200) {
             alert(response.data.message)
         } 
     } catch (error) {
