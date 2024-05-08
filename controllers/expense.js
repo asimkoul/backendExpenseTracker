@@ -1,12 +1,26 @@
 const expense = require('../models/expense');
+
+function isStringValid(string) {
+    if(string==undefined || string.length==0){
+        return true
+    }else{
+        return false
+    }
+
+}
+
 exports.postExpense = async (req, res, next) => {
 
     const {expenseamount,description,category}=req.body
+    if(isStringValid(expenseamount)||isStringValid(description)||isStringValid(category)){
+        return res.status(500).json({success:false,message:'false params'})
+    }
     try {
         const data=await expense.create({
             expenseamount:expenseamount,
             description:description,
-            category:category
+            category:category,
+            userId:req.user.id
         })
         res.status(201).json(data)
     } catch (error) {
@@ -16,7 +30,7 @@ exports.postExpense = async (req, res, next) => {
 };
 exports.getExpense=async (req,res,next)=>{
     try {
-        const expenses=await expense.findAll()
+        const expenses=await expense.findAll({where:{userId:req.user.id}})
         res.status(200).json(expenses);
     } catch (error) {
         console.log("ERROR:(",err);
@@ -24,10 +38,10 @@ exports.getExpense=async (req,res,next)=>{
     }
 }
 exports.deleteExpense=async (req,res,next)=>{
-    expense.findByPk(req.params.id)
-    .then(result => {
-        result.destroy()
-        res.send(result);
+    const expenseId=req.params.id
+    expense.destroy({where:{id:expenseId,userId:req.user.id}})
+    .then( ()=> {
+        res.status(200).json({success:true,message:'deleted successfully'})
     }).catch(err => console.log(err));
 }
 

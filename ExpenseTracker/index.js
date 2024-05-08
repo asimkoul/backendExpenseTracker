@@ -6,7 +6,8 @@ async function handleFormSubmit(event){
         category:event.target.category.value
     }
     try{
-        const response = await axios.post(`http://localhost:3000/expense/postexpense`,expenseDetails)
+        const token=localStorage.getItem('token')
+        const response = await axios.post(`http://localhost:3000/expense/postexpense`,expenseDetails,{headers:{"Authorization":token}})
         display(response.data);
         event.target.reset();
     }catch(error) {
@@ -14,8 +15,9 @@ async function handleFormSubmit(event){
     }
 }
 document.addEventListener('DOMContentLoaded',async ()=>{
+    const token=localStorage.getItem('token')
     try {
-        const response=await axios.get(`http://localhost:3000/expense/getexpense`)
+        const response=await axios.get(`http://localhost:3000/expense/getexpense`,{headers:{"Authorization":token}})
         response.data.forEach(result => {
             display(result)
         });
@@ -38,8 +40,9 @@ function display(data) {
     ul.appendChild(li)
 
     deleteBtn.addEventListener('click', () => {
+        const token=localStorage.getItem('token')
         const id = deleteBtn.getAttribute("id");
-        axios.delete(`http://localhost:3000/expense/deleteexpense/${id}`)
+        axios.delete(`http://localhost:3000/expense/deleteexpense/${id}`,{headers:{"Authorization":token}})
         .then(res => {
             ul.removeChild(li)
         })
